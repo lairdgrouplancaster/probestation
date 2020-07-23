@@ -2,6 +2,10 @@ from ctypes import *
 import os
 import platform
 
+dir_path = os.path.dirname(os.path.realpath(__file__))
+dir_path = os.path.join(dir_path, 'ximc_win64')
+os.environ['PATH'] = dir_path + os.pathsep + os.environ['PATH']
+
 # Load library
 
 # use cdecl on unix and stdcall on windows
