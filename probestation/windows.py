@@ -108,6 +108,7 @@ class PlotterWindow(QtGui.QMainWindow):
 
 class WindowStageSignals(QObject):
     sig_stage_move_command = pyqtSignal(str)
+    sig_stage_step_command = pyqtSignal(str)
     sig_stage_stop_command = pyqtSignal(str)
     sig_stage_speed_change = pyqtSignal(int)
     sig_stage_emergency_stop = pyqtSignal()
@@ -184,6 +185,7 @@ class ManagedWindow(QtGui.QMainWindow):
         # stage signals
         self.stage_signals = WindowStageSignals()
         self.stage_signals.sig_stage_move_command.connect(self.stages.move)
+        self.stage_signals.sig_stage_step_command.connect(self.stages.step)
         self.stage_signals.sig_stage_stop_command.connect(self.stages.stop)
         self.stage_signals.sig_stage_speed_change.connect(self.stages.initialise_speed_change)
         self.stage_signals.sig_stage_emergency_stop.connect(self.stages.stage_movement_emergency_stop)
@@ -484,6 +486,22 @@ lost focus)""")
             elif key == QtCore.Qt.Key_Left:
                 if not (self.stages._movement_flag & 1) and not (self.stages._movement_flag & 4):
                     self.stage_signals.sig_stage_move_command.emit("west")
+                return True
+            if key == QtCore.Qt.Key_W:
+                if not (self.stages._movement_flag & 8) and not (self.stages._movement_flag & 2):
+                    self.stage_signals.sig_stage_step_command.emit("north")
+                return True
+            elif key == QtCore.Qt.Key_D:
+                if  not (self.stages._movement_flag & 4) and not (self.stages._movement_flag & 1):
+                    self.stage_signals.sig_stage_step_command.emit("east")
+                return True
+            elif key == QtCore.Qt.Key_S:
+                if not (self.stages._movement_flag & 2) and not (self.stages._movement_flag & 8):
+                    self.stage_signals.sig_stage_step_command.emit("south")
+                return True
+            elif key == QtCore.Qt.Key_A:
+                if not (self.stages._movement_flag & 1) and not (self.stages._movement_flag & 4):
+                    self.stage_signals.sig_stage_step_command.emit("west")
                 return True
             elif key == 16777238:
                 if not (self.stages._movement_flag & 32) and not (self.stages._movement_flag & 64):

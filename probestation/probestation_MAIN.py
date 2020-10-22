@@ -16,6 +16,9 @@ gate_source_address = "USB0::0x05E6::0x2450::04305994::INSTR"
 
 
 import sys
+### temporary, avoiding a bug ---------------
+sys.modules['cloudpickle'] = None
+### -----------------------------------------
 import os
 from time import sleep
 from datetime import datetime as dt

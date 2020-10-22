@@ -159,6 +159,28 @@ class StageStack(QObject):
             print("move ", direction)
     
     
+    def step(self, direction):
+        coords = self.read_stack_position_3d()
+        print("stage step from ", coords)
+        if direction == "north":
+            coords[1][1] = coords[1][1] + 1
+        elif direction == "east":
+            coords[0][1] = coords[0][1] + 1
+        elif direction == "south":
+            coords[1][1] = coords[1][1] - 1
+        elif direction == "west":
+            coords[0][1] = coords[0][1] - 1
+        elif direction == "up":
+            coords[2][1] = coords[2][1] + 1
+        elif direction == "down":
+            coords[2][1] = coords[2][1] - 1
+        else:
+            print("unknown stage movement command")
+        print("to ", coords)
+        if self.motorsOk:
+            self.goto_coords(coords)
+    
+    
     def stop(self, direction):
         self.stage_not_moving.set()
         if direction == "north":
@@ -253,6 +275,16 @@ class StageStack(QObject):
             return [x_pos.Position, x_pos.uPosition]
         else:
             return [1000, 0]
+    
+    
+    def read_stack_position_3d(self):
+        coords = [[],[],[]]
+        if self.motorsOk:
+            for stage, index in ((self.stage_x,0), (self.stage_y,1), (self.stage_z,2)):
+                coords[index] = self.read_stage_position(stage)
+            return coords
+        else:
+            return self._coordinates_center
     
     
     def capture_coords(self, device, calling_window):
