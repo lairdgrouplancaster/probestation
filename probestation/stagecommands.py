@@ -80,6 +80,7 @@ class StageStack(QObject):
                 serial = c_uint()
                 result = lib.get_serial_number(stage, byref(serial))
                 if result == Result.Ok:
+                    print(serial.value)
                     if serial.value == 18162:
                         self.stage_x = stage
                     elif serial.value == 18212:
@@ -88,6 +89,8 @@ class StageStack(QObject):
                         self.stage_z = stage
                     else:
                         print("Found a motor that can't be identified")
+                else:
+                    print("no motor found")
         
         if self.stage_x is None or self.stage_y is None or self.stage_z is None:
             self.motorsOk = False
@@ -111,14 +114,14 @@ class StageStack(QObject):
         self._movement_flag = 0b0000000
         
         # stored coordinates
-        self._coordinates_center = [[0,0],[0,0],[500,0]]
-        self._coordinates_load = [[0,0],[-14500,0],[500,0]]
+        self._coordinates_center = [[0,0],[0,0],[1000,0]]
+        self._coordinates_load = [[0,0],[-13440,0],[1000,0]]
         self._coordinates_dev_00 = [[-8000,0],[-10000,0],[5000,0]]
         self._coordinates_dev_i0 = [[8000,0],[-11000,0],[4500,0]]
         self._coordinates_dev_0j = [[-7500,0],[10000,0],[5500,0]]
-        self._coordinates_delta_hor = [[0,0],[0,0],[500,0]]
-        self._coordinates_delta_vert = [[0,0],[0,0],[500,0]]
-        self._automovement_safe_height = 500
+        self._coordinates_delta_hor = [[0,0],[0,0],[0,0]]
+        self._coordinates_delta_vert = [[0,0],[0,0],[0,0]]
+        self._automovement_safe_height = 1000
     
     
     
@@ -132,7 +135,7 @@ class StageStack(QObject):
         if direction == "north":
             self._movement_flag += 0b0001000
             if self.motorsOk:
-                lib.command_right(self.stage_y)
+                lib.command_left(self.stage_y)
         elif direction == "east":
             self._movement_flag += 0b0000100
             if self.motorsOk:
@@ -140,7 +143,7 @@ class StageStack(QObject):
         elif direction == "south":
             self._movement_flag += 0b0000010
             if self.motorsOk:
-                lib.command_left(self.stage_y)
+                lib.command_right(self.stage_y)
         elif direction == "west":
             self._movement_flag += 0b0000001
             if self.motorsOk:
@@ -163,11 +166,11 @@ class StageStack(QObject):
         coords = self.read_stack_position_3d()
         print("stage step from ", coords)
         if direction == "north":
-            coords[1][1] = coords[1][1] + 1
+            coords[1][1] = coords[1][1] - 1
         elif direction == "east":
             coords[0][1] = coords[0][1] + 1
         elif direction == "south":
-            coords[1][1] = coords[1][1] - 1
+            coords[1][1] = coords[1][1] + 1
         elif direction == "west":
             coords[0][1] = coords[0][1] - 1
         elif direction == "up":
@@ -358,6 +361,7 @@ class StageStack(QObject):
         self.slow_down()
         sleep(1)
         self.stage_not_moving.set()
+        print("arrived at coords ", self.read_stack_position_3d())
     
     
     def coordinates_cleanup(self, coords):            # supports only 1/256 microstep mode. modify for different microstep modes?
@@ -380,7 +384,9 @@ class StageStack(QObject):
     
     
     def coords_boudary_check(self, coords):
-        if abs(coords[0][0]) > 14600 or abs(coords[1][0]) > 14600 or coords[2][0] < 0 or coords[2][0] > 156000:
+        if coords[0][0] < -15130 or coords[0][0] > 14990 \
+            or coords[1][0] < -13440 or coords[1][0] > 16600 \
+            or coords[2][0] < 800 or coords[2][0] > 157000:
             #print(coords)
             raise Exception("Stage coordinates out of bounds")
     
@@ -416,8 +422,8 @@ class StageStack(QObject):
     def _calc_new_safe_height(self):
         self._automovement_safe_height = min(self._coordinates_dev_00[2][0],self._coordinates_dev_i0[2][0],self._coordinates_dev_0j[2][0])
         self._automovement_safe_height -= 20000
-        if self._automovement_safe_height < 500:
-            self._automovement_safe_height = 500
+        if self._automovement_safe_height < 1000:
+            self._automovement_safe_height = 1000
     
     
     def _interruptable_wait_for_stop(self, stage, delay):
